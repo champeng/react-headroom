@@ -16,8 +16,12 @@ export default class Headroom extends Component {
     onPin: PropTypes.func,
     onUnpin: PropTypes.func,
     onUnfix: PropTypes.func,
+    onPinned: PropTypes.func,
+    onUnpinned: PropTypes.func,
+    onUnfixed: PropTypes.func,
     wrapperStyle: PropTypes.object,
     pinStart: PropTypes.number,
+    forceState: PropTypes.string,
     style: PropTypes.object,
   };
 
@@ -30,8 +34,12 @@ export default class Headroom extends Component {
     onPin: noop,
     onUnpin: noop,
     onUnfix: noop,
+    onPinned: noop,
+    onUnpinned: noop,
+    onUnfixed: noop,
     wrapperStyle: {},
     pinStart: 0,
+    forceState: null,
   };
 
   constructor (props) {
@@ -60,6 +68,15 @@ export default class Headroom extends Component {
       this.props.parent().removeEventListener('scroll', this.handleScroll)
     } else if (!nextProps.disable && this.props.disable) {
       this.props.parent().addEventListener('scroll', this.handleScroll)
+    }
+    if (nextProps.forceState && this.props.forceState !== nextProps.forceState) {
+      if (nextProps.forceState === 'unpinned') {
+        this.unpin()
+      } else if (nextProps.forceState === 'unfixed') {
+        this.unfix()
+      } else if (nextProps.forceState === 'pinned') {
+        this.pin()
+      }
     }
   }
 
@@ -168,7 +185,9 @@ export default class Headroom extends Component {
       className: 'headroom headroom--unpinned',
     }, () => {
       setTimeout(() => {
-        this.setState({ state: 'unpinned' })
+        this.setState({ state: 'unpinned' }, () => {
+          this.props.onUnpinned()
+        })
       }, 0)
     })
   }
@@ -180,6 +199,8 @@ export default class Headroom extends Component {
       translateY: 0,
       className: 'headroom headroom--pinned',
       state: 'pinned',
+    }, () => {
+      this.props.onPinned()
     })
   }
 
@@ -190,6 +211,8 @@ export default class Headroom extends Component {
       translateY: 0,
       className: 'headroom headroom--unfixed',
       state: 'unfixed',
+    }, () => {
+      this.props.onUnfixed()
     })
   }
 
@@ -222,6 +245,9 @@ export default class Headroom extends Component {
     delete divProps.onUnpin
     delete divProps.onPin
     delete divProps.onUnfix
+    delete divProps.onUnpinned
+    delete divProps.onPinned
+    delete divProps.onUnfixed
     delete divProps.disableInlineStyles
     delete divProps.disable
     delete divProps.parent
@@ -229,6 +255,7 @@ export default class Headroom extends Component {
     delete divProps.upTolerance
     delete divProps.downTolerance
     delete divProps.pinStart
+    delete divProps.forceState
 
     const { style, wrapperStyle, ...rest } = divProps
 
